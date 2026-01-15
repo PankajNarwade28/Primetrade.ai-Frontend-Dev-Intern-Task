@@ -1,6 +1,7 @@
 import { requireAuth } from '@/lib/auth';
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 
 // GET user profile
 export async function GET(request) {
@@ -30,13 +31,46 @@ export async function GET(request) {
   }
 }
 
-// PUT - Update user profile
+// PUT - Update user profile (requires password verification)
 export async function PUT(request) {
   const { error, user } = await requireAuth();
   if (error) return error;
 
   try {
-    const { name, email } = await request.json();
+    const { name, email, currentPassword } = await request.json();
+
+    // Require current password for any profile updates
+    if (!currentPassword) {
+      return NextResponse.json(
+        { error: 'Current password is required to update profile' },
+        { status: 400 }
+      );
+    }
+
+    // Verify current password
+    const userResult = await query(
+      'SELECT password FROM users WHERE id = $1',
+      [user.userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      userResult.rows[0].password
+    );
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { error: 'Current password is incorrect' },
+        { status: 401 }
+      );
+    }
 
     // Server-side validation
     if (email) {
@@ -82,7 +116,7 @@ export async function PUT(request) {
 
     if (email !== undefined) {
       updates.push(`email = $${paramIndex}`);
-      params.push(email.trim());
+      params.push(email.trim().toLowerCase());
       paramIndex++;
     }
 

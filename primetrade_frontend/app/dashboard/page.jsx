@@ -41,6 +41,7 @@ import {
   Person as PersonIcon,
   TrendingUp as TrendingUpIcon,
   Close as CloseIcon,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
 
 export default function Dashboard() {
@@ -60,6 +61,7 @@ export default function Dashboard() {
   const [profileForm, setProfileForm] = useState({
     name: "",
     email: "",
+    currentPassword: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -78,10 +80,19 @@ export default function Dashboard() {
         setProfileForm({
           name: data.profile.name || "",
           email: data.profile.email,
+          currentPassword: "",
         });
+      } else if (res.status === 401) {
+        // Unauthorized - redirect to login
+        window.location.href = '/auth';
+      } else {
+        setError("Failed to fetch profile. Refreshing page...");
+        setTimeout(() => window.location.reload(), 2000);
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
+      setError("Network error. Refreshing page...");
+      setTimeout(() => window.location.reload(), 2000);
     }
   };
 
@@ -91,16 +102,22 @@ export default function Dashboard() {
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
       if (filterStatus) params.append("status", filterStatus);
-      const res = await fetch(`/api/tasks?${params}`);
+      const res = await fetch(`/api/tasks?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setTasks(data.tasks);
         setError("");
+      } else if (res.status === 401) {
+        // Unauthorized - redirect to login
+        window.location.href = '/auth';
       } else {
-        setError("Failed to fetch tasks");
+        setError("Failed to fetch tasks. Refreshing page...");
+        setTimeout(() => window.location.reload(), 2000);
       }
     } catch (err) {
-      setError("Network error");
+      console.error("Network error:", err);
+      setError("Network error. Refreshing page...");
+      setTimeout(() => window.location.reload(), 2000);
     } finally {
       setLoading(false);
     }
@@ -134,9 +151,12 @@ export default function Dashboard() {
         setError(data.error);
       }
     } catch (err) {
-      setError("Failed to create task");
+      console.error("Error creating task:", err);
+      setError("Network error. Refreshing page...");
+      setTimeout(() => window.location.reload(), 2000);
     }
   };
+  
 
   const handleUpdateTask = async () => {
     try {
@@ -156,7 +176,9 @@ export default function Dashboard() {
         setError(data.error);
       }
     } catch (err) {
-      setError("Failed to update task");
+      console.error("Error updating task:", err);
+      setError("Network error. Refreshing page...");
+      setTimeout(() => window.location.reload(), 2000);
     }
   };
 
@@ -171,21 +193,35 @@ export default function Dashboard() {
         setError("Failed to delete task");
       }
     } catch (err) {
-      setError("Failed to delete task");
+      console.error("Error deleting task:", err);
+      setError("Network error. Refreshing page...");
+      setTimeout(() => window.location.reload(), 2000);
     }
   };
 
   const handleUpdateProfile = async () => {
     try {
+      // Validate current password is provided
+      if (!profileForm.currentPassword) {
+        setError("Please enter your current password to update profile");
+        return;
+      }
+
       const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileForm),
       });
+      
       if (res.ok) {
         const data = await res.json();
         setUser(data.profile);
         setOpenProfileDialog(false);
+        setProfileForm({
+          name: data.profile.name || "",
+          email: data.profile.email,
+          currentPassword: "",
+        });
         setError("");
         showSnackbar("Profile updated successfully!");
       } else {
@@ -287,20 +323,36 @@ export default function Dashboard() {
                     </Typography>
                   </Box>
                 </Box>
-                <Button
-                  variant="contained"
-                  startIcon={<PersonIcon />}
-                  onClick={() => setOpenProfileDialog(true)}
-                  sx={{
-                    bgcolor: "rgba(255,255,255,0.2)",
-                    backdropFilter: "blur(10px)",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                    borderRadius: 2,
-                    px: 3,
-                  }}
-                >
-                  Edit Profile
-                </Button>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<PersonIcon />}
+                    onClick={() => setOpenProfileDialog(true)}
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      backdropFilter: "blur(10px)",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                      borderRadius: 2,
+                      px: 3,
+                    }}
+                  >
+                    Edit Profile
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<LogoutIcon />}
+                    onClick={handleLogout}
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.15)",
+                      backdropFilter: "blur(10px)",
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+                      borderRadius: 2,
+                      px: 3,
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </Box>
               </Box>
             </Paper>
           </Fade>
@@ -640,6 +692,9 @@ export default function Dashboard() {
             Edit Profile
           </DialogTitle>
           <DialogContent>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Enter your current password to update your profile information
+            </Alert>
             <TextField
               label="Name"
               fullWidth
@@ -657,6 +712,18 @@ export default function Dashboard() {
               type="email"
               required
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+            <TextField
+              label="Current Password"
+              fullWidth
+              value={profileForm.currentPassword}
+              onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+              margin="normal"
+              type="password"
+              required
+              placeholder="Enter your password to verify"
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              helperText="Required to verify it's you"
             />
           </DialogContent>
           <DialogActions sx={{ px: 3, pb: 3 }}>
