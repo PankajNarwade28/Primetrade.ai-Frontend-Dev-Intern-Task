@@ -1,48 +1,9 @@
-"use client";
+'use client';
 import { useEffect, useState } from "react";
-import Navbar from "../../components/Navbar";
-import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  Chip,
-  Box,
-  Alert,
-  CircularProgress,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Grid,
-  Card,
-  CardContent,
-  Fade,
-  Slide,
-  Snackbar,
-  Avatar,
-  Divider,
-  Tooltip,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-  CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
-  Assignment as AssignmentIcon,
-  Person as PersonIcon,
-  TrendingUp as TrendingUpIcon,
-  Close as CloseIcon,
-  Logout as LogoutIcon,
-} from "@mui/icons-material";
+import { 
+  Plus, Edit2, Trash2, Search, CheckCircle, Clock, 
+  FileText, User, TrendingUp, LogOut, X 
+} from 'lucide-react';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -83,16 +44,10 @@ export default function Dashboard() {
           currentPassword: "",
         });
       } else if (res.status === 401) {
-        // Unauthorized - redirect to login
         window.location.href = '/auth';
-      } else {
-        setError("Failed to fetch profile. Refreshing page...");
-        setTimeout(() => window.location.reload(), 2000);
       }
     } catch (err) {
-      console.error("Error fetching profile:", err);
-      setError("Network error. Refreshing page...");
-      setTimeout(() => window.location.reload(), 2000);
+      console.error("Error:", err);
     }
   };
 
@@ -106,32 +61,22 @@ export default function Dashboard() {
       if (res.ok) {
         const data = await res.json();
         setTasks(data.tasks);
-        setError("");
-      } else if (res.status === 401) {
-        // Unauthorized - redirect to login
-        window.location.href = '/auth';
-      } else {
-        setError("Failed to fetch tasks. Refreshing page...");
-        setTimeout(() => window.location.reload(), 2000);
       }
     } catch (err) {
-      console.error("Network error:", err);
-      setError("Network error. Refreshing page...");
-      setTimeout(() => window.location.reload(), 2000);
+      console.error("Error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchTasks();
-    }, 300);
+    const timer = setTimeout(() => fetchTasks(), 300);
     return () => clearTimeout(timer);
   }, [searchTerm, filterStatus]);
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbar({ open: true, message, severity });
+    setTimeout(() => setSnackbar({ open: false, message: "", severity: "success" }), 4000);
   };
 
   const handleCreateTask = async () => {
@@ -146,17 +91,11 @@ export default function Dashboard() {
         setTaskForm({ title: "", description: "", status: "pending" });
         fetchTasks();
         showSnackbar("Task created successfully!");
-      } else {
-        const data = await res.json();
-        setError(data.error);
       }
     } catch (err) {
-      console.error("Error creating task:", err);
-      setError("Network error. Refreshing page...");
-      setTimeout(() => window.location.reload(), 2000);
+      console.error("Error:", err);
     }
   };
-  
 
   const handleUpdateTask = async () => {
     try {
@@ -171,42 +110,32 @@ export default function Dashboard() {
         setTaskForm({ title: "", description: "", status: "pending" });
         fetchTasks();
         showSnackbar("Task updated successfully!");
-      } else {
-        const data = await res.json();
-        setError(data.error);
       }
     } catch (err) {
-      console.error("Error updating task:", err);
-      setError("Network error. Refreshing page...");
-      setTimeout(() => window.location.reload(), 2000);
+      console.error("Error:", err);
     }
   };
 
   const handleDeleteTask = async (id) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
+    if (!confirm("Delete this task?")) return;
     try {
       const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchTasks();
-        showSnackbar("Task deleted successfully!", "info");
-      } else {
-        setError("Failed to delete task");
+        showSnackbar("Task deleted!", "info");
       }
     } catch (err) {
-      console.error("Error deleting task:", err);
-      setError("Network error. Refreshing page...");
-      setTimeout(() => window.location.reload(), 2000);
+      console.error("Error:", err);
     }
   };
 
   const handleUpdateProfile = async () => {
-    try {
-      // Validate current password is provided
-      if (!profileForm.currentPassword) {
-        setError("Please enter your current password to update profile");
-        return;
-      }
+    if (!profileForm.currentPassword) {
+      showSnackbar("Enter password to update", "error");
+      return;
+    }
 
+    try {
       const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -222,14 +151,10 @@ export default function Dashboard() {
           email: data.profile.email,
           currentPassword: "",
         });
-        setError("");
-        showSnackbar("Profile updated successfully!");
-      } else {
-        const data = await res.json();
-        setError(data.error);
+        showSnackbar("Profile updated!");
       }
     } catch (err) {
-      setError("Failed to update profile");
+      console.error("Error:", err);
     }
   };
 
@@ -250,534 +175,418 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "/auth";
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/auth";
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "completed":
-        return "success";
-      case "in-progress":
-        return "warning";
-      default:
-        return "default";
+      case "completed": return "bg-green-100 text-green-800";
+      case "in-progress": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "completed":
-        return <CheckCircleIcon />;
-      case "in-progress":
-        return <ScheduleIcon />;
-      default:
-        return <AssignmentIcon />;
+      case "completed": return <CheckCircle size={16} />;
+      case "in-progress": return <Clock size={16} />;
+      default: return <FileText size={16} />;
     }
   };
 
   const completionRate = tasks.length > 0 
-    ? Math.round((tasks.filter((t) => t.status === "completed").length / tasks.length) * 100)
+    ? Math.round((tasks.filter(t => t.status === "completed").length / tasks.length) * 100)
     : 0;
 
   if (loading && !user) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
-        <CircularProgress size={60} />
-      </Box>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
+      </div>
     );
   }
 
   return (
-    <>
-      <Navbar user={user} onLogout={handleLogout} />
-      <Box sx={{ bgcolor: "#f5f7fa", minHeight: "100vh", pb: 6 }}>
-        <Container maxWidth="lg" sx={{ pt: 4 }}>
-          {/* Hero Section */}
-          <Fade in timeout={800}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 4,
-                mb: 4,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "white",
-                borderRadius: 3,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Avatar sx={{ width: 64, height: 64, bgcolor: "rgba(255,255,255,0.2)", fontSize: "2rem" }}>
-                    {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h4" fontWeight="700" gutterBottom>
-                      Welcome back, {user?.name || "User"}! 👋
-                    </Typography>
-                    <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                      {user?.email}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: "flex", gap: 2 }}>
-                  <Button
-                    variant="contained"
-                    startIcon={<PersonIcon />}
-                    onClick={() => setOpenProfileDialog(true)}
-                    sx={{
-                      bgcolor: "rgba(255,255,255,0.2)",
-                      backdropFilter: "blur(10px)",
-                      "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                      borderRadius: 2,
-                      px: 3,
-                    }}
-                  >
-                    Edit Profile
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<LogoutIcon />}
-                    onClick={handleLogout}
-                    sx={{
-                      bgcolor: "rgba(255,255,255,0.15)",
-                      backdropFilter: "blur(10px)",
-                      "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
-                      borderRadius: 2,
-                      px: 3,
-                    }}
-                  >
-                    Logout
-                  </Button>
-                </Box>
-              </Box>
-            </Paper>
-          </Fade>
-
-          {/* Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Slide direction="up" in timeout={600}>
-                <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", transition: "transform 0.2s", "&:hover": { transform: "translateY(-4px)" } }}>
-                  <CardContent>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Box>
-                        <Typography color="text.secondary" variant="body2" fontWeight="600">
-                          Total Tasks
-                        </Typography>
-                        <Typography variant="h4" fontWeight="700" sx={{ mt: 1 }}>
-                          {tasks.length}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ bgcolor: "#e3f2fd", color: "#1976d2", width: 56, height: 56 }}>
-                        <AssignmentIcon />
-                      </Avatar>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Slide>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Slide direction="up" in timeout={700}>
-                <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", transition: "transform 0.2s", "&:hover": { transform: "translateY(-4px)" } }}>
-                  <CardContent>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Box>
-                        <Typography color="text.secondary" variant="body2" fontWeight="600">
-                          Completed
-                        </Typography>
-                        <Typography variant="h4" fontWeight="700" sx={{ mt: 1 }}>
-                          {tasks.filter((t) => t.status === "completed").length}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ bgcolor: "#e8f5e9", color: "#2e7d32", width: 56, height: 56 }}>
-                        <CheckCircleIcon />
-                      </Avatar>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Slide>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Slide direction="up" in timeout={800}>
-                <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", transition: "transform 0.2s", "&:hover": { transform: "translateY(-4px)" } }}>
-                  <CardContent>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Box>
-                        <Typography color="text.secondary" variant="body2" fontWeight="600">
-                          In Progress
-                        </Typography>
-                        <Typography variant="h4" fontWeight="700" sx={{ mt: 1 }}>
-                          {tasks.filter((t) => t.status === "in-progress").length}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ bgcolor: "#fff3e0", color: "#e65100", width: 56, height: 56 }}>
-                        <ScheduleIcon />
-                      </Avatar>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Slide>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Slide direction="up" in timeout={900}>
-                <Card sx={{ borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", transition: "transform 0.2s", "&:hover": { transform: "translateY(-4px)" } }}>
-                  <CardContent>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Box>
-                        <Typography color="text.secondary" variant="body2" fontWeight="600">
-                          Completion Rate
-                        </Typography>
-                        <Typography variant="h4" fontWeight="700" sx={{ mt: 1 }}>
-                          {completionRate}%
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ bgcolor: "#f3e5f5", color: "#7b1fa2", width: 56, height: 56 }}>
-                        <TrendingUpIcon />
-                      </Avatar>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Slide>
-            </Grid>
-          </Grid>
-
-          {/* Tasks Section */}
-          <Fade in timeout={1000}>
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2 }}>
-                <Typography variant="h5" fontWeight="700">
-                  Your Tasks
-                </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={openCreateDialog}
-                  sx={{
-                    borderRadius: 2,
-                    px: 3,
-                    py: 1.2,
-                    textTransform: "none",
-                    fontSize: "1rem",
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    boxShadow: "0 4px 12px rgba(102, 126, 234, 0.4)",
-                    "&:hover": {
-                      boxShadow: "0 6px 16px rgba(102, 126, 234, 0.6)",
-                    },
-                  }}
-                >
-                  Create Task
-                </Button>
-              </Box>
-
-              <Divider sx={{ mb: 3 }} />
-
-              {/* Search and Filter */}
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={8}>
-                  <TextField
-                    fullWidth
-                    placeholder="Search tasks..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                      startAdornment: <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />,
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 2,
-                        bgcolor: "#f8f9fa",
-                        "&:hover": { bgcolor: "#fff" },
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth>
-                    <InputLabel>Filter Status</InputLabel>
-                    <Select
-                      value={filterStatus}
-                      label="Filter Status"
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      sx={{ borderRadius: 2, bgcolor: "#f8f9fa" }}
-                    >
-                      <MenuItem value="">All</MenuItem>
-                      <MenuItem value="pending">Pending</MenuItem>
-                      <MenuItem value="in-progress">In Progress</MenuItem>
-                      <MenuItem value="completed">Completed</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-
-              {/* Tasks List */}
-              {loading ? (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-                  <CircularProgress />
-                </Box>
-              ) : tasks.length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 8 }}>
-                  <AssignmentIcon sx={{ fontSize: 80, color: "text.secondary", opacity: 0.3, mb: 2 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No tasks found
-                  </Typography>
-                  <Typography color="text.secondary" sx={{ mb: 3 }}>
-                    Create your first task to get started!
-                  </Typography>
-                </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  {tasks.map((task, index) => (
-                    <Grid item xs={12} key={task.id}>
-                      <Slide direction="up" in timeout={200 + index * 100}>
-                        <Card
-                          sx={{
-                            borderRadius: 2,
-                            border: "1px solid #e0e0e0",
-                            transition: "all 0.3s",
-                            "&:hover": {
-                              boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                              transform: "translateY(-2px)",
-                              borderColor: "#667eea",
-                            },
-                          }}
-                        >
-                          <CardContent>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
-                              <Box sx={{ flex: 1 }}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-                                  <Typography variant="h6" fontWeight="600">
-                                    {task.title}
-                                  </Typography>
-                                  <Chip
-                                    icon={getStatusIcon(task.status)}
-                                    label={task.status.replace("-", " ")}
-                                    color={getStatusColor(task.status)}
-                                    size="small"
-                                    sx={{ textTransform: "capitalize", fontWeight: 600 }}
-                                  />
-                                </Box>
-                                {task.description && (
-                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                    {task.description}
-                                  </Typography>
-                                )}
-                                <Typography variant="caption" color="text.secondary">
-                                  Created: {new Date(task.created_at).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </Typography>
-                              </Box>
-                              <Box sx={{ display: "flex", gap: 1 }}>
-                                <Tooltip title="Edit">
-                                  <IconButton
-                                    onClick={() => openEditDialog(task)}
-                                    size="small"
-                                    sx={{
-                                      bgcolor: "#e3f2fd",
-                                      color: "#1976d2",
-                                      "&:hover": { bgcolor: "#1976d2", color: "#fff" },
-                                    }}
-                                  >
-                                    <EditIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Delete">
-                                  <IconButton
-                                    onClick={() => handleDeleteTask(task.id)}
-                                    size="small"
-                                    sx={{
-                                      bgcolor: "#ffebee",
-                                      color: "#d32f2f",
-                                      "&:hover": { bgcolor: "#d32f2f", color: "#fff" },
-                                    }}
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            </Box>
-                          </CardContent>
-                        </Card>
-                      </Slide>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Paper>
-          </Fade>
-        </Container>
-
-        {/* Task Create/Edit Dialog */}
-        <Dialog
-          open={openDialog}
-          onClose={() => setOpenDialog(false)}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{ sx: { borderRadius: 3 } }}
-        >
-          <DialogTitle sx={{ pb: 1, fontSize: "1.5rem", fontWeight: 700 }}>
-            {editingTask ? "Edit Task" : "Create New Task"}
-          </DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              label="Task Title"
-              fullWidth
-              value={taskForm.title}
-              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-              margin="normal"
-              required
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-            />
-            <TextField
-              label="Description"
-              fullWidth
-              value={taskForm.description}
-              onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-              margin="normal"
-              multiline
-              rows={3}
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-            />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={taskForm.status}
-                label="Status"
-                onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })}
-                sx={{ borderRadius: 2 }}
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile-First Navbar */}
+      <nav className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              TaskMaster
+            </h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={() => setOpenProfileDialog(true)}
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="in-progress">In Progress</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-              </Select>
-            </FormControl>
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button onClick={() => setOpenDialog(false)} sx={{ borderRadius: 2 }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={editingTask ? handleUpdateTask : handleCreateTask}
-              variant="contained"
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              }}
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+                  {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+                <span className="hidden sm:inline text-sm text-black font-medium truncate max-w-[100px] md:max-w-none">
+                  {user?.name || "User"}
+                </span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-black transition-colors"
+                title="Logout"
+              >
+                <LogOut size={18} className="sm:w-5 sm:h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content with Proper Padding */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 text-black">
+        
+        {/* Hero Section - Mobile First */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 text-white">
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl sm:text-2xl lg:text-3xl font-bold flex-shrink-0">
+                {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 break-words">
+                  Welcome, {user?.name || "User"}! 👋
+                </h2>
+                <p className="text-xs sm:text-sm lg:text-base opacity-90 truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setOpenProfileDialog(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl hover:bg-white/30 transition-all font-medium text-sm sm:text-base"
             >
-              {editingTask ? "Update" : "Create"}
-            </Button>
-          </DialogActions>
-        </Dialog>
+              <User size={18} />
+              <span>Edit Profile</span>
+            </button>
+          </div>
+        </div>
 
-        {/* Profile Edit Dialog */}
-        <Dialog
-          open={openProfileDialog}
-          onClose={() => setOpenProfileDialog(false)}
-          maxWidth="sm"
-          fullWidth
-          PaperProps={{ sx: { borderRadius: 3 } }}
-        >
-          <DialogTitle sx={{ pb: 1, fontSize: "1.5rem", fontWeight: 700 }}>
-            Edit Profile
-          </DialogTitle>
-          <DialogContent>
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Enter your current password to update your profile information
-            </Alert>
-            <TextField
-              label="Name"
-              fullWidth
-              value={profileForm.name}
-              onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-              margin="normal"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-            />
-            <TextField
-              label="Email"
-              fullWidth
-              value={profileForm.email}
-              onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-              margin="normal"
-              type="email"
-              required
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-            />
-            <TextField
-              label="Current Password"
-              fullWidth
-              value={profileForm.currentPassword}
-              onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
-              margin="normal"
-              type="password"
-              required
-              placeholder="Enter your password to verify"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-              helperText="Required to verify it's you"
-            />
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button onClick={() => setOpenProfileDialog(false)} sx={{ borderRadius: 2 }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleUpdateProfile}
-              variant="contained"
-              sx={{
-                borderRadius: 2,
-                px: 3,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              }}
+        {/* Stats Cards - Flexbox Equal Height, Mobile First */}
+        <div className="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
+          <div className="flex-1 basis-[calc(50%-0.375rem)] sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(25%-1.125rem)] min-w-0">
+            <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-md transition-all h-full">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-black mb-1 sm:mb-2">
+                    Total Tasks
+                  </p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-black truncate">
+                    {tasks.length}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <FileText className="text-blue-600 w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 basis-[calc(50%-0.375rem)] sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(25%-1.125rem)] min-w-0">
+            <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-md transition-all h-full">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-black mb-1 sm:mb-2">
+                    Completed
+                  </p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-black truncate">
+                    {tasks.filter(t => t.status === "completed").length}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="text-green-600 w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 basis-[calc(50%-0.375rem)] sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(25%-1.125rem)] min-w-0">
+            <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-md transition-all h-full">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-black mb-1 sm:mb-2">
+                    In Progress
+                  </p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-black truncate">
+                    {tasks.filter(t => t.status === "in-progress").length}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">
+                  <Clock className="text-yellow-600 w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 basis-[calc(50%-0.375rem)] sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(25%-1.125rem)] min-w-0">
+            <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-sm hover:shadow-md transition-all h-full">
+              <div className="flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] sm:text-xs lg:text-sm font-semibold text-black mb-1 sm:mb-2">
+                    Completion
+                  </p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-black truncate">
+                    {completionRate}%
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="text-purple-600 w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tasks Section */}
+        <div className="bg-white rounded-lg sm:rounded-xl lg:rounded-2xl p-4 sm:p-5 lg:p-6 xl:p-8 shadow-sm">
+          
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black">Your Tasks</h3>
+            <button
+              onClick={openCreateDialog}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg transition-all font-medium text-sm sm:text-base"
             >
-              Update Profile
-            </Button>
-          </DialogActions>
-        </Dialog>
+              <Plus size={18} />
+              <span>Create Task</span>
+            </button>
+          </div>
 
-        {/* Snackbar for success messages */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            sx={{ borderRadius: 2 }}
-            variant="filled"
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+          {/* Search and Filter */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm sm:text-base text-black placeholder:text-black"
+                />
+              </div>
+            </div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full sm:w-40 md:w-48 px-3 py-2.5 border border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm sm:text-base text-black"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
 
-        {/* Error Snackbar */}
-        <Snackbar
-          open={!!error}
-          autoHideDuration={6000}
-          onClose={() => setError("")}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        >
-          <Alert
-            onClose={() => setError("")}
-            severity="error"
-            sx={{ borderRadius: 2 }}
-            variant="filled"
-          >
-            {error}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </>
+          {/* Tasks List */}
+          {loading ? (
+            <div className="flex justify-center py-12 sm:py-16">
+              <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-4 border-indigo-600 border-t-transparent"></div>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="text-center py-12 sm:py-16">
+              <FileText className="mx-auto text-black mb-3 sm:mb-4" size={48} />
+              <h4 className="text-base sm:text-lg lg:text-xl font-semibold text-black mb-2">No tasks found</h4>
+              <p className="text-sm sm:text-base text-black">Create your first task to get started!</p>
+            </div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="border border-gray-200 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-5 hover:shadow-md hover:border-indigo-300 transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-start gap-2 mb-2">
+                        <h4 className="text-sm sm:text-base lg:text-lg font-semibold text-black break-words flex-1">
+                          {task.title}
+                        </h4>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${getStatusColor(task.status)}`}>
+                          {getStatusIcon(task.status)}
+                          <span className="capitalize whitespace-nowrap">{task.status.replace("-", " ")}</span>
+                        </span>
+                      </div>
+                      {task.description && (
+                        <p className="text-xs sm:text-sm lg:text-base text-black mb-2 sm:mb-3 break-words">
+                          {task.description}
+                        </p>
+                      )}
+                      <p className="text-[10px] sm:text-xs lg:text-sm text-black">
+                        Created: {new Date(task.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex sm:flex-col gap-2 justify-end">
+                      <button
+                        onClick={() => openEditDialog(task)}
+                        className="flex-1 sm:flex-none p-2 sm:p-2.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="flex-1 sm:flex-none p-2 sm:p-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Task Dialog */}
+      {openDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 sm:p-6 flex justify-between items-center">
+              <h3 className="text-lg sm:text-xl font-bold text-black">
+                {editingTask ? "Edit Task" : "Create Task"}
+              </h3>
+              <button onClick={() => setOpenDialog(false)} className="p-2  text-black hover:bg-gray-100 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={taskForm.title}
+                  onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                  className="w-full px-4 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base text-black placeholder:text-black"
+                  placeholder="Task title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Description</label>
+                <textarea
+                  value={taskForm.description}
+                  onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-sm sm:text-base text-black placeholder:text-black"
+                  placeholder="Task description"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Status</label>
+                <select
+                  value={taskForm.status}
+                  onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })}
+                  className="w-full px-4 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-sm sm:text-base text-black"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+            <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 flex gap-3">
+              <button
+                onClick={() => setOpenDialog(false)}
+                className="flex-1 px-6 text-black py-2.5 sm:py-3 border rounded-lg sm:rounded-xl hover:bg-gray-50 font-medium text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={editingTask ? handleUpdateTask : handleCreateTask}
+                className="flex-1 px-6 text-black py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg font-medium text-sm sm:text-base"
+              >
+                {editingTask ? "Update" : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Dialog */}
+      {openProfileDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 sm:p-6 flex justify-between items-center">
+              <h3 className="text-lg sm:text-xl font-bold">Edit Profile</h3>
+              <button onClick={() => setOpenProfileDialog(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs sm:text-sm text-blue-800">
+                  Enter your current password to update profile
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Name</label>
+                <input
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className="w-full px-4 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base text-black"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                  className="w-full px-4 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base text-black"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={profileForm.currentPassword}
+                  onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+                  className="w-full px-4 py-2.5 sm:py-3 border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base text-black placeholder:text-black"
+                  placeholder="Verify with password"
+                />
+              </div>
+            </div>
+            <div className="sticky bottom-0 bg-white border-t p-4 sm:p-6 flex gap-3">
+              <button
+                onClick={() => setOpenProfileDialog(false)}
+                className="flex-1 px-6 py-2.5  text-black sm:py-3 border rounded-lg sm:rounded-xl hover:bg-gray-50 font-medium text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProfile}
+                className="flex-1 px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl hover:shadow-lg font-medium text-sm sm:text-base"
+              >
+                Update Profile  
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Snackbar */}
+      {snackbar.open && (
+        <div className={`fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 px-4 py-3 rounded-lg shadow-lg text-sm sm:text-base z-50  
+          ${snackbar.severity === "success" ? "bg-green-600 text-white" : ""}
+          ${snackbar.severity === "error" ? "bg-red-600 text-white" : ""}
+          ${snackbar.severity === "info" ? "bg-blue-600 text-white" : ""}
+        `}>
+          {snackbar.message}
+        </div>  
+      )}
+    </div>
   );
 }

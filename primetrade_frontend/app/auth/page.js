@@ -265,7 +265,7 @@ export default function AuthPage() {
             <h2 className="text-3xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <p className="text-center text-gray-600 mb-6">
+            <p className="text-center text-black mb-6">
               {isLogin ? 'Sign in to access your dashboard' : 'Sign up to get started'}
             </p>
 
@@ -278,14 +278,14 @@ export default function AuthPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Name (Optional)
                   </label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({...form, name: e.target.value})}
-                    className={`w-full px-4 py-3 rounded-lg border ${
+                    className={`w-full px-4 py-3 rounded-lg border text-black ${
                       errors.name ? 'border-red-500' : 'border-gray-300'
                     } focus:outline-none focus:ring-2 focus:ring-purple-500`}
                   />
@@ -296,7 +296,7 @@ export default function AuthPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -317,7 +317,7 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-black mb-1">
                   Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -336,7 +336,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -345,13 +345,13 @@ export default function AuthPage() {
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
                 {!isLogin && !errors.password && (
-                  <p className="text-gray-500 text-sm mt-1">Minimum 6 characters</p>
+                  <p className="text-black text-sm mt-1">Minimum 6 characters</p>
                 )}
               </div>
 
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Confirm Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -362,7 +362,7 @@ export default function AuthPage() {
                         setForm({...form, confirmPassword: e.target.value});
                         if (errors.confirmPassword) setErrors({...errors, confirmPassword: ''});
                       }}
-                      className={`w-full px-4 py-3 pr-12 rounded-lg border ${
+                      className={`w-full px-4 py-3 pr-12 rounded-lg border text-black ${
                         errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                       } focus:outline-none focus:ring-2 focus:ring-purple-500`}
                       autoComplete="new-password"
@@ -370,7 +370,7 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-black hover:text-black"
                     >
                       {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
